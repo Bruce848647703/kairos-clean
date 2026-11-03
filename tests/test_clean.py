@@ -283,3 +283,16 @@ def test_cli_json_output(tmp_path, capsys):
     assert main(["audit", str(path), "--json"]) == 0
     parsed = json.loads(capsys.readouterr().out)
     assert parsed["summary"]["rows"] == 2
+
+def test_cli_min_score_gate(tmp_path, capsys):
+    path = tmp_path / "ok.csv"
+    path.write_text("date,close,volume\n2024-01-02,10,100\n2024-01-03,11,100\n",
+                    encoding="utf-8")
+    from kairos_clean.cli import main
+
+    assert main(["audit", str(path), "--min-score", "90"]) == 0
+
+    dirty = tmp_path / "dirty.csv"
+    dirty.write_text("date,close,volume\n2024-01-02,0,0\n2024-01-03,11,100\n",
+                     encoding="utf-8")
+    assert main(["audit", str(dirty), "--min-score", "90"]) == 1

@@ -45,6 +45,9 @@ kairos-clean audit data.csv
 
 # 体检 + 清洗，输出干净 CSV 和报告
 kairos-clean clean data.csv --out-dir cleaned --fill-gaps
+
+# 当 CI 门禁用：分数低于 95 就以退出码 1 失败
+kairos-clean audit data.csv --min-score 95
 ```
 
 Python：
@@ -135,7 +138,7 @@ kairos_clean/
 ├── api.py      audit() / clean() / 质量分
 ├── report.py   Markdown / JSON 报告
 └── cli.py      命令行
-tests/          24 个测试，每个坑单独造一份数据
+tests/          25 个测试，每个坑单独造一份数据
 ```
 
 检查和修复是分开的：`checks.py` 只负责"发现"，`api.clean` 负责"怎么修"，
@@ -144,7 +147,7 @@ tests/          24 个测试，每个坑单独造一份数据
 ## 测试
 
 ```bash
-python -m pytest     # 24 passed
+python -m pytest     # 25 passed
 ```
 
 每个检查项都有一份专门的脏数据；另外还测了清洗前后行数、改动日志、报告渲染和 CLI。

@@ -47,6 +47,10 @@ def _cmd_audit(args: argparse.Namespace) -> int:
                 icon = {"error": "❌", "warn": "⚠️", "info": "ℹ️"}.get(finding["severity"], "")
                 print(f"  {icon} {finding['kind']:<18} {finding['count']:>6}  "
                       f"{finding['message']}")
+    if args.min_score is not None and report["summary"]["score"] < args.min_score:
+        print(f"质量分 {report['summary']['score']:.1f} 低于阈值 {args.min_score:.1f}",
+              file=sys.stderr)
+        return 1
     if args.out:
         text = to_markdown(report)
         os.makedirs(os.path.dirname(os.path.abspath(args.out)), exist_ok=True)
@@ -98,6 +102,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     audit_parser.add_argument("file")
     audit_parser.add_argument("--json", action="store_true")
     audit_parser.add_argument("--out", default="", help="可选：写一份 Markdown 报告")
+    audit_parser.add_argument("--min-score", type=float, default=None,
+                              help="质量分低于该值时以退出码 1 结束（用于 CI 门禁）")
     _add_thresholds(audit_parser)
 
     clean_parser = sub.add_parser("clean", help="清洗并输出干净 CSV")
