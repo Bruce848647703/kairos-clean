@@ -69,6 +69,10 @@ def _cmd_clean(args: argparse.Namespace) -> int:
         winsorize=args.winsorize,
     )
     summary = result.summary()
+    if args.min_score is not None and summary["score_after"] < args.min_score:
+        print(f"清洗后质量分 {summary['score_after']:.1f} 低于阈值 {args.min_score:.1f}",
+              file=sys.stderr)
+        return 1
     if args.json:
         print(to_json({"summary": summary, "changes": result.changes}))
     else:
@@ -114,6 +118,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     clean_parser.add_argument("--no-repair", action="store_true", help="不修 OHLC")
     clean_parser.add_argument("--keep-duplicates", action="store_true", help="不去重")
     clean_parser.add_argument("--json", action="store_true")
+    clean_parser.add_argument("--min-score", type=float, default=None,
+                              help="清洗后质量分低于该值时以退出码 1 结束")
     _add_thresholds(clean_parser)
 
     args = parser.parse_args(argv)
