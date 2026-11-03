@@ -296,3 +296,20 @@ def test_cli_min_score_gate(tmp_path, capsys):
     dirty.write_text("date,close,volume\n2024-01-02,0,0\n2024-01-03,11,100\n",
                      encoding="utf-8")
     assert main(["audit", str(dirty), "--min-score", "90"]) == 1
+
+
+def test_cli_clean_min_score_gate(tmp_path, capsys):
+    path = tmp_path / "dirty.csv"
+    path.write_text("date,open,high,low,close,volume\n"
+                    "2024-01-02,10,10.2,9.8,10,100\n"
+                    "2024-01-03,10,10.2,9.8,10,100\n"
+                    "2024-01-04,10,10.2,9.8,10,100\n"
+                    "2024-01-05,10,10.2,9.8,10,100\n"
+                    "2024-01-08,10,10.2,9.8,10,100\n"
+                    "2024-01-09,10,10.2,9.8,10,0\n", encoding="utf-8")
+    from kairos_clean.cli import main
+
+    assert main(["clean", str(path), "--out-dir", str(tmp_path / "o1"),
+                 "--min-score", "50"]) == 0
+    assert main(["clean", str(path), "--out-dir", str(tmp_path / "o2"),
+                 "--min-score", "100"]) == 1
