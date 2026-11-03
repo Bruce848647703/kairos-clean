@@ -313,3 +313,19 @@ def test_cli_clean_min_score_gate(tmp_path, capsys):
                  "--min-score", "50"]) == 0
     assert main(["clean", str(path), "--out-dir", str(tmp_path / "o2"),
                  "--min-score", "100"]) == 1
+
+
+def test_cli_fail_on_severity(tmp_path, capsys):
+    path = tmp_path / "bad.csv"
+    path.write_text("date,open,high,low,close,volume\n"
+                    "2024-01-02,10,9,9.5,10,100\n"      # high < open -> error
+                    "2024-01-03,10,10.5,9.5,10,100\n", encoding="utf-8")
+    from kairos_clean.cli import main
+
+    assert main(["audit", str(path), "--fail-on", "error"]) == 1
+    assert main(["audit", str(path), "--fail-on", "warn"]) == 1
+
+    ok = tmp_path / "ok.csv"
+    ok.write_text("date,close,volume\n2024-01-02,10,100\n2024-01-03,11,100\n",
+                  encoding="utf-8")
+    assert main(["audit", str(ok), "--fail-on", "warn"]) == 0
