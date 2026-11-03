@@ -15,7 +15,7 @@
 """
 from __future__ import annotations
 
-__version__ = "0.1.2"
+__version__ = "0.1.3"
 
 from .api import CleanResult, audit, clean, quality_score  # noqa: E402
 from .checks import Options  # noqa: E402

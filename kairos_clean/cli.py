@@ -24,6 +24,16 @@ def _options(args: argparse.Namespace) -> Options:
                    outlier_k=args.outlier_k, jump_threshold=args.jump_threshold)
 
 
+def _severity_failed(report: dict, fail_on: str | None) -> bool:
+    """按严重度判断是否以失败退出。"""
+    if not fail_on:
+        return False
+    counts = report["summary"]["by_severity"]
+    if fail_on == "error":
+        return counts["error"] > 0
+    return counts["error"] + counts["warn"] > 0
+
+
 def _print_summary(report: dict) -> None:
     summary = report["summary"]
     print(f"标的 {summary['n_symbols']} 个 · {summary['rows']:,} 行 · "
@@ -51,6 +61,9 @@ def _cmd_audit(args: argparse.Namespace) -> int:
         print(f"质量分 {report['summary']['score']:.1f} 低于阈值 {args.min_score:.1f}",
               file=sys.stderr)
         return 1
+    if _severity_failed(report, args.fail_on):
+        print(f"存在 {args.fail_on} 级问题", file=sys.stderr)
+        return 1
     if args.out:
         text = to_markdown(report)
         os.makedirs(os.path.dirname(os.path.abspath(args.out)), exist_ok=True)
@@ -72,6 +85,9 @@ def _cmd_clean(args: argparse.Namespace) -> int:
     if args.min_score is not None and summary["score_after"] < args.min_score:
         print(f"清洗后质量分 {summary['score_after']:.1f} 低于阈值 {args.min_score:.1f}",
               file=sys.stderr)
+        return 1
+    if _severity_failed(result.after, args.fail_on):
+        print(f"清洗后仍存在 {args.fail_on} 级问题", file=sys.stderr)
         return 1
     if args.json:
         print(to_json({"summary": summary, "changes": result.changes}))
@@ -108,6 +124,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     audit_parser.add_argument("--out", default="", help="可选：写一份 Markdown 报告")
     audit_parser.add_argument("--min-score", type=float, default=None,
                               help="质量分低于该值时以退出码 1 结束（用于 CI 门禁）")
+    audit_parser.add_argument("--fail-on", choices=("error", "warn"), default=None,
+                              help="出现该级别（含更严重）问题时以退出码 1 结束")
     _add_thresholds(audit_parser)
 
     clean_parser = sub.add_parser("clean", help="清洗并输出干净 CSV")
@@ -120,6 +138,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     clean_parser.add_argument("--json", action="store_true")
     clean_parser.add_argument("--min-score", type=float, default=None,
                               help="清洗后质量分低于该值时以退出码 1 结束")
+    clean_parser.add_argument("--fail-on", choices=("error", "warn"), default=None,
+                              help="清洗后仍存在该级别问题时以退出码 1 结束")
     _add_thresholds(clean_parser)
 
     args = parser.parse_args(argv)
