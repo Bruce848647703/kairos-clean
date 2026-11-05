@@ -138,7 +138,7 @@ kairos_clean/
 ├── api.py      audit() / clean() / 质量分
 ├── report.py   Markdown / JSON 报告
 └── cli.py      命令行
-tests/          25 个测试，每个坑单独造一份数据
+tests/          27 个测试，每个坑单独造一份数据
 ```
 
 检查和修复是分开的：`checks.py` 只负责"发现"，`api.clean` 负责"怎么修"，

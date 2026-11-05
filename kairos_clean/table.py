@@ -10,7 +10,7 @@ from __future__ import annotations
 import csv
 import os
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Sequence, Tuple
+from typing import Dict, Optional, Sequence
 
 import numpy as np
 
